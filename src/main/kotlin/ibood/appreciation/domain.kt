@@ -1,11 +1,13 @@
 package ibood.appreciation
 
 import io.ktor.application.call
+import io.ktor.features.BadRequestException
+import io.ktor.features.NotFoundException
 
 data class Product(
-    val id: String,
-    val title: String,
-    val priceInCents: Int
+        val id: String,
+        val title: String,
+        val priceInCents: Int
 )
 
 interface ProductRepository {
@@ -31,6 +33,12 @@ class InMemoryProductRepository : ProductRepository {
     override fun all() = products
     override fun count() = products.count()
     override fun getChunk(limit: Int, offset: Int): List<Product> {
+        if (offset < 0) {
+            throw BadRequestException("The offset must be zero or a positive integer")
+        }
+        if (offset >= count()) {
+            throw NotFoundException("Offset cannot be more than size of repo")
+        }
         val end = (offset + limit).coerceAtMost(count())
         return products.slice(offset until end)
     }
