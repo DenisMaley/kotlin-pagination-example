@@ -1,5 +1,6 @@
 package ibood.appreciation
-
+// TODO
+// Clean up imports
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
@@ -28,7 +29,9 @@ class AppKtorTest {
             assertThat(json[0]["title"].textValue()).isEqualTo("TV screen")
             assertThat(json[0]["priceInCents"].intValue()).isEqualTo(499_00)
         }
+    }
 
+    fun `When get products with params Then return 200 OK and paged products`() = withKtor {
         with(handleRequest(Get, "/products?limit=2&offset=2")) {
             assertThat(response.status()).isEqualTo(OK)
             val json = jackson.readTree(response.content)

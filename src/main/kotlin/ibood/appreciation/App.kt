@@ -34,11 +34,13 @@ fun applicationKodein() = Kodein {
 fun Application.mainKodeined(kodein: Kodein) {
     val productRepository by kodein.instance<ProductRepository>()
 
+    //  TODO
+    //  We should handle exceptions: return 404, etc.
     routing {
         get("/products") {
-            val total = productRepository.all().count()
-            val limit = call.parameters["limit"]?.toInt() ?: total
+            val total = productRepository.count()
             val offset = call.parameters["offset"]?.toInt() ?: 0
+            val limit = call.parameters["limit"]?.toInt() ?: total - offset
 
             val chunk = productRepository.getChunk(limit, offset)
             PaginationHeaderGenerator.buildHeaders(total, limit, offset, call).forEach { header ->

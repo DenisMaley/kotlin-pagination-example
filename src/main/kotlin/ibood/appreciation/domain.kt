@@ -1,5 +1,7 @@
 package ibood.appreciation
 
+import io.ktor.application.call
+
 data class Product(
     val id: String,
     val title: String,
@@ -8,6 +10,7 @@ data class Product(
 
 interface ProductRepository {
     fun all(): List<Product>
+    fun count(): Int
     fun getChunk(limit: Int, offset: Int): List<Product>
 }
 
@@ -26,6 +29,10 @@ class InMemoryProductRepository : ProductRepository {
     )
 
     override fun all() = products
-    override fun getChunk(limit: Int, offset: Int) = products.slice(offset..offset + limit - 1)
+    override fun count() = products.count()
+    override fun getChunk(limit: Int, offset: Int): List<Product> {
+        val end = (offset + limit).coerceAtMost(count())
+        return products.slice(offset until end)
+    }
 
 }
