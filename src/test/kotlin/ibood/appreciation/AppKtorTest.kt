@@ -8,6 +8,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpMethod.Companion.Get
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
@@ -57,4 +59,35 @@ class AppKtorTest {
             assertThat(nextPageUrl.endsWith("/products?limit=2&offset=4")).isTrue()
         }
     }
+
+    fun `When get products with negative offset Then return 400 Bad request and message`() = withKtor {
+        with(handleRequest(Get, "/products?offset=-1&limit=2")) {
+            assertThat(response.status()).isEqualTo(BadRequest)
+            val json = jackson.readTree(response.content)
+            assertThat(json.size()).isEqualTo(1)
+            assertThat(json["msg"].textValue())
+                    .isEqualTo("The offset and limit must be zero or a positive integers")
+        }
+    }
+
+    fun `When get products with negative limit Then return 400 Bad request and message`() = withKtor {
+        with(handleRequest(Get, "/products?offset=2&limit=-2")) {
+            assertThat(response.status()).isEqualTo(BadRequest)
+            val json = jackson.readTree(response.content)
+            assertThat(json.size()).isEqualTo(1)
+            assertThat(json["msg"].textValue())
+                    .isEqualTo("The offset and limit must be zero or a positive integers")
+        }
+    }
+
+    fun `When get products with offset more than size Then return 404 Not found and message`() = withKtor {
+        with(handleRequest(Get, "/products?offset=8&limit=2")) {
+            assertThat(response.status()).isEqualTo(NotFound)
+            val json = jackson.readTree(response.content)
+            assertThat(json.size()).isEqualTo(1)
+            assertThat(json["msg"].textValue())
+                    .isEqualTo("Offset cannot be more than size of the repo: 5")
+        }
+    }
+
 }
