@@ -33,13 +33,14 @@ class InMemoryProductRepository : ProductRepository {
     override fun all() = products
     override fun count() = products.count()
     override fun getChunk(limit: Int, offset: Int): List<Product> {
-        if (offset < 0) {
-            throw BadRequestException("The offset must be zero or a positive integer")
+        val total = count()
+        if (offset < 0 || limit < 0) {
+            throw BadRequestException("The offset and limit must be zero or a positive integers")
         }
-        if (offset >= count()) {
-            throw NotFoundException("Offset cannot be more than size of repo")
+        if (offset >= total) {
+            throw NotFoundException("Offset cannot be more than size of the repo: ${total - 1}")
         }
-        val end = (offset + limit).coerceAtMost(count())
+        val end = (offset + limit).coerceAtMost(total)
         return products.slice(offset until end)
     }
 
